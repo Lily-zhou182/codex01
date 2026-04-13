@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Semantic Differential 问卷</title>
+  <style>
+    :root {
+      --bg: #f3efe7;
+      --surface: rgba(255, 252, 246, 0.92);
+      --surface-strong: #fffdf8;
+      --text: #1f2933;
+      --muted: #62707c;
+      --line: #d6cec0;
+      --primary: #9c5c2f;
+      --primary-soft: #ead5c4;
+      --accent: #355c54;
+      --danger: #b34c35;
+      --shadow: 0 18px 40px rgba(64, 48, 33, 0.10);
+      --radius-lg: 24px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --font-heading: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      --font-body: "Avenir Next", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-body);
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(156, 92, 47, 0.13), transparent 32%),
+        radial-gradient(circle at top right, rgba(53, 92, 84, 0.14), transparent 28%),
+        linear-gradient(180deg, #f8f3ea 0%, var(--bg) 55%, #f1ebdf 100%);
+      min-height: 100vh;
+    }
+
+    .page-shell {
+      width: min(1120px, calc(100% - 32px));
+      margin: 32px auto 56px;
+    }
+
+    .hero {
+      padding: 28px;
+      border: 1px solid rgba(156, 92, 47, 0.15);
+      border-radius: 32px;
+      background: linear-gradient(135deg, rgba(255, 251, 245, 0.96), rgba(246, 238, 227, 0.92));
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -40px -40px auto;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(53, 92, 84, 0.14), transparent 70%);
+    }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-family: var(--font-heading);
+      font-size: clamp(2rem, 4vw, 3.3rem);
+      line-height: 1.05;
+      letter-spacing: 0.01em;
+    }
+
+    .hero p {
+      max-width: 760px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.75;
+    }
+
+    .survey-form {
+      margin-top: 24px;
+      display: grid;
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid rgba(108, 92, 69, 0.12);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      backdrop-filter: blur(8px);
+      animation: fade-up 0.55s ease both;
+    }
+
+    .card:nth-child(2) {
+      animation-delay: 0.08s;
+    }
+
+    .card:nth-child(3) {
+      animation-delay: 0.16s;
+    }
+
+    .card:nth-child(4) {
+      animation-delay: 0.24s;
+    }
+
+    .section-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-end;
+      margin-bottom: 20px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-family: var(--font-heading);
+      font-size: 1.7rem;
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 700px;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .field.field-wide {
+      grid-column: 1 / -1;
+    }
+
+    label,
+    .field legend {
+      font-size: 0.96rem;
+      font-weight: 600;
+    }
+
+    .required-mark {
+      color: var(--danger);
+      margin-left: 4px;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--surface-strong);
+      border-radius: var(--radius-sm);
+      padding: 13px 14px;
+      font: inherit;
+      color: var(--text);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: rgba(156, 92, 47, 0.7);
+      box-shadow: 0 0 0 4px rgba(156, 92, 47, 0.14);
+      transform: translateY(-1px);
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .product-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .gallery-stage {
+      position: relative;
+      min-height: 390px;
+      border-radius: 28px;
+      overflow: hidden;
+      background: linear-gradient(135deg, rgba(238, 228, 214, 0.95), rgba(255, 253, 248, 0.98));
+      border: 1px solid rgba(108, 92, 69, 0.12);
+      display: grid;
+      place-items: center;
+    }
+
+    .gallery-stage img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .gallery-stage.placeholder {
+      padding: 28px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .placeholder-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: rgba(156, 92, 47, 0.10);
+      color: var(--primary);
+      font-size: 2rem;
+      font-family: var(--font-heading);
+    }
+
+    .thumb-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .thumb {
+      position: relative;
+      min-height: 88px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 2px solid transparent;
+      background: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .thumb:hover,
+    .thumb:focus-visible {
+      transform: translateY(-2px);
+      border-color: rgba(156, 92, 47, 0.45);
+      box-shadow: 0 10px 22px rgba(64, 48, 33, 0.12);
+      outline: none;
+    }
+
+    .thumb.active {
+      border-color: var(--primary);
+    }
+
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .thumb span {
+      position: absolute;
+      left: 10px;
+      bottom: 10px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(31, 41, 51, 0.7);
+      color: #fff;
+      font-size: 0.75rem;
+    }
+
+    .product-meta {
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+
+    .product-meta .meta-box {
+      padding: 18px;
+      border-radius: 18px;
+      background: rgba(255, 253, 248, 0.94);
+      border: 1px solid rgba(108, 92, 69, 0.1);
+    }
+
+    .meta-box h3 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+    }
+
+    .meta-box p,
+    .meta-box li {
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .meta-box ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .question-list {
+      display: grid;
+      gap: 18px;
+    }
+
+    .sd-item,
+    .extra-item {
+      border-radius: 20px;
+      background: rgba(255, 253, 248, 0.92);
+      border: 1px solid rgba(108, 92, 69, 0.1);
+      padding: 20px;
+    }
+
+    .sd-item h3,
+    .extra-item h3 {
+      margin: 0 0 6px;
+      font-size: 1rem;
+    }
+
+    .help-text {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.7;
+      margin: 0 0 14px;
+    }
+
+    .scale-wrap {
+      display: grid;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .scale-labels {
+      display: grid;
+      grid-template-columns: minmax(100px, 1fr) auto minmax(100px, 1fr);
+      gap: 12px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .scale-labels span:nth-child(2) {
+      justify-self: center;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(98, 112, 124, 0.75);
+    }
+
+    .scale-options {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .scale-option input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .scale-option label {
+      display: grid;
+      gap: 8px;
+      place-items: center;
+      padding: 14px 8px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 700;
+    }
+
+    .scale-option label small {
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    .scale-option input:checked + label {
+      border-color: var(--primary);
+      background: linear-gradient(180deg, rgba(156, 92, 47, 0.12), rgba(255, 252, 246, 1));
+      color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 20px rgba(156, 92, 47, 0.12);
+    }
+
+    .radio-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .radio-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+    }
+
+    .radio-chip input {
+      width: auto;
+      margin: 0;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .button {
+      border: none;
+      border-radius: 999px;
+      padding: 14px 22px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    }
+
+    .button:hover,
+    .button:focus-visible {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 22px rgba(64, 48, 33, 0.14);
+      outline: none;
+    }
+
+    .button-primary {
+      color: #fff;
+      background: linear-gradient(135deg, #a95e2e, #7f3d1e);
+    }
+
+    .button-secondary {
+      color: var(--accent);
+      background: rgba(53, 92, 84, 0.12);
+    }
+
+    .status-panel {
+      display: grid;
+      gap: 10px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .status-message {
+      min-height: 24px;
+      font-size: 0.95rem;
+    }
+
+    .status-message.error {
+      color: var(--danger);
+    }
+
+    .status-message.success {
+      color: var(--accent);
+    }
+
+    .footnote {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    @keyframes fade-up {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 880px) {
+      .field-grid,
+      .product-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .gallery-stage {
+        min-height: 300px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page-shell {
+        width: min(100% - 20px, 1120px);
+        margin: 18px auto 36px;
+      }
+
+      .hero,
+      .card {
+        padding: 20px;
+        border-radius: 24px;
+      }
+
+      .scale-options {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .scale-labels {
+        grid-template-columns: 1fr;
+      }
+
+      .scale-labels span:nth-child(2) {
+        justify-self: start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <h1 id="survey-title">Semantic Differential 产品评价问卷</h1>
+      <p id="survey-subtitle">
+        请先查看产品图片，再依据你的直观感受完成下列语义差异量表。页面会在本地将本次答卷导出为 CSV 文件，便于后续使用 Excel、WPS 或统计软件整理分析。
+      </p>
+    </header>
+
+    <form id="survey-form" class="survey-form" novalidate>
+      <section class="card">
+        <div class="section-head">
+          <div>
+            <h2>受试者信息</h2>
+            <p>收集基础人口学信息与样本编号，方便后续统计分组与筛选。</p>
+          </div>
+        </div>
+        <div id="participant-fields" class="field-grid"></div>
+      </section>
+
+      <section class="card">
+        <div class="section-head">
+          <div>
+            <h2>产品图片</h2>
+            <p id="product-description"></p>
+          </div>
+        </div>
+        <div class="product-layout">
+          <div>
+            <div id="gallery-stage" class="gallery-stage"></div>
+            <div id="thumbnail-list" class="thumb-list" aria-label="产品图片缩略图列表"></div>
+          </div>
+          <aside class="product-meta">
+            <div class="meta-box">
+              <h3 id="product-name"></h3>
+              <p id="product-notes"></p>
+            </div>
+            <div class="meta-box">
+              <h3>填写说明</h3>
+              <ul>
+                <li>请先完整浏览图片，再开始评分。</li>
+                <li>量表分值越靠左，越接近左侧形容词；越靠右，越接近右侧形容词。</li>
+                <li>提交前系统会检查必填项。</li>
+              </ul>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-head">
+          <div>
+            <h2>问卷内容</h2>
+            <p>请结合整体观感作答。若无特殊说明，每题均为单选。</p>
+          </div>
+        </div>
+        <div>
+          <div id="sd-question-list" class="question-list"></div>
+          <div id="extra-question-list" class="question-list" style="margin-top: 18px;"></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-head">
+          <div>
+            <h2>导出结果</h2>
+            <p>点击导出后，将当前填写内容保存为一行 CSV。页面不会联网传输数据。</p>
+          </div>
+        </div>
+        <div class="status-panel">
+          <div class="actions">
+            <button type="submit" class="button button-primary">导出 CSV</button>
+            <button type="button" id="reset-button" class="button button-secondary">清空当前填写</button>
+          </div>
+          <div id="status-message" class="status-message" aria-live="polite"></div>
+          <div class="footnote">
+            文件名格式默认为 <code>semantic-differential-[productId]-[timestamp].csv</code>。后续若你要替换图片或题目，只需修改脚本顶部配置常量。
+          </div>
+        </div>
+      </section>
+    </form>
+  </div>
+
+  <script>
+    const productInfo = {
+      id: "sample-product",
+      title: "产品 A 视觉评价",
+      subtitle: "请浏览产品多角度图片，并依据第一印象完成语义差异评价。",
+      description: "这里展示的是单个产品的多张视图。你可以将下方图片路径替换为真实素材，页面结构无需改动。",
+      notes: "当前使用占位图片配置。若你已有本地图片，可将 image 数组中的 src 替换为实际路径。",
+      images: [
+        { id: "img-front", label: "正面", src: "", alt: "产品正面图占位" },
+        { id: "img-side", label: "侧面", src: "", alt: "产品侧面图占位" },
+        { id: "img-detail", label: "细节", src: "", alt: "产品细节图占位" }
+      ]
+    };
+
+    const participantFields = [
+      { id: "participantId", label: "受试者编号", type: "text", required: true, placeholder: "例如 P001" },
+      { id: "age", label: "年龄", type: "number", required: true, min: 1, placeholder: "请输入年龄" },
+      {
+        id: "gender",
+        label: "性别",
+        type: "select",
+        required: true,
+        options: [
+          { value: "", label: "请选择" },
+          { value: "男", label: "男" },
+          { value: "女", label: "女" },
+          { value: "不便透露", label: "不便透露" }
+        ]
+      },
+      { id: "occupation", label: "专业/职业", type: "text", required: true, placeholder: "例如 工业设计 / 市场营销 / 学生" },
+      { id: "surveyDate", label: "填写日期", type: "date", required: true, wide: true }
+    ];
+
+    const sdQuestions = [
+      { id: "sd-modern_traditional", prompt: "整体风格评价", leftLabel: "传统", rightLabel: "现代", scale: 7, required: true },
+      { id: "sd-simple_complex", prompt: "形式复杂度", leftLabel: "简洁", rightLabel: "复杂", scale: 7, required: true },
+      { id: "sd_practical_decorative", prompt: "功能感受", leftLabel: "实用", rightLabel: "装饰性强", scale: 7, required: true },
+      { id: "sd_soft_hard", prompt: "材质联想", leftLabel: "柔和", rightLabel: "坚硬", scale: 7, required: true },
+      { id: "sd_low_high_quality", prompt: "品质印象", leftLabel: "低质感", rightLabel: "高质感", scale: 7, required: true },
+      { id: "sd_unattractive_attractive", prompt: "整体吸引力", leftLabel: "不吸引人", rightLabel: "吸引人", scale: 7, required: true }
+    ];
+
+    const extraQuestions = [
+      {
+        id: "overallPreference",
+        type: "radio",
+        label: "你对该产品的整体偏好程度如何？",
+        required: true,
+        options: ["非常不喜欢", "不喜欢", "一般", "喜欢", "非常喜欢"]
+      },
+      {
+        id: "purchaseIntent",
+        type: "radio",
+        label: "若价格合适，你是否愿意进一步了解或购买该产品？",
+        required: true,
+        options: ["完全不愿意", "不太愿意", "不确定", "比较愿意", "非常愿意"]
+      },
+      {
+        id: "comment",
+        type: "textarea",
+        label: "请补充你对该产品的主观印象或建议。",
+        required: false,
+        placeholder: "可填写你注意到的细节、优缺点，或任何补充意见。"
+      }
+    ];
+
+    const form = document.getElementById("survey-form");
+    const participantFieldsContainer = document.getElementById("participant-fields");
+    const sdQuestionList = document.getElementById("sd-question-list");
+    const extraQuestionList = document.getElementById("extra-question-list");
+    const statusMessage = document.getElementById("status-message");
+    const resetButton = document.getElementById("reset-button");
+    const galleryStage = document.getElementById("gallery-stage");
+    const thumbnailList = document.getElementById("thumbnail-list");
+
+    let activeImageId = productInfo.images[0]?.id ?? null;
+
+    function initPage() {
+      document.getElementById("survey-title").textContent = productInfo.title;
+      document.getElementById("survey-subtitle").textContent = productInfo.subtitle;
+      document.getElementById("product-description").textContent = productInfo.description;
+      document.getElementById("product-name").textContent = productInfo.title;
+      document.getElementById("product-notes").textContent = productInfo.notes;
+
+      renderParticipantFields();
+      renderGallery();
+      renderSdQuestions();
+      renderExtraQuestions();
+      presetDate();
+    }
+
+    function renderParticipantFields() {
+      participantFieldsContainer.innerHTML = "";
+
+      participantFields.forEach((field) => {
+        const wrapper = document.createElement("div");
+        wrapper.className = field.wide ? "field field-wide" : "field";
+
+        const label = document.createElement("label");
+        label.setAttribute("for", field.id);
+        label.innerHTML = `${field.label}${field.required ? '<span class="required-mark">*</span>' : ""}`;
+        wrapper.appendChild(label);
+
+        let input;
+
+        if (field.type === "select") {
+          input = document.createElement("select");
+          field.options.forEach((option) => {
+            const optionElement = document.createElement("option");
+            optionElement.value = option.value;
+            optionElement.textContent = option.label;
+            input.appendChild(optionElement);
+          });
+        } else {
+          input = document.createElement("input");
+          input.type = field.type;
+          if (field.placeholder) {
+            input.placeholder = field.placeholder;
+          }
+          if (field.min !== undefined) {
+            input.min = field.min;
+          }
+        }
+
+        input.id = field.id;
+        input.name = field.id;
+        input.required = Boolean(field.required);
+        input.autocomplete = "off";
+        wrapper.appendChild(input);
+        participantFieldsContainer.appendChild(wrapper);
+      });
+    }
+
+    function renderGallery() {
+      thumbnailList.innerHTML = "";
+      const currentImage = getActiveImage();
+
+      updateGalleryStage(currentImage);
+
+      productInfo.images.forEach((image) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `thumb${image.id === activeImageId ? " active" : ""}`;
+        button.setAttribute("aria-label", `查看${image.label}`);
+
+        if (image.src) {
+          const thumbnail = document.createElement("img");
+          thumbnail.src = image.src;
+          thumbnail.alt = image.alt || image.label;
+          button.appendChild(thumbnail);
+        } else {
+          const fallback = document.createElement("div");
+          fallback.style.cssText = "display:grid;place-items:center;height:100%;background:linear-gradient(135deg, rgba(156,92,47,0.12), rgba(53,92,84,0.12));color:#6b7280;font-weight:700;";
+          fallback.textContent = image.label;
+          button.appendChild(fallback);
+        }
+
+        const badge = document.createElement("span");
+        badge.textContent = image.label;
+        button.appendChild(badge);
+
+        button.addEventListener("click", () => {
+          activeImageId = image.id;
+          updateGalleryStage(image);
+          renderGallery();
+        });
+
+        thumbnailList.appendChild(button);
+      });
+    }
+
+    function updateGalleryStage(image) {
+      galleryStage.innerHTML = "";
+
+      if (image && image.src) {
+        galleryStage.className = "gallery-stage";
+        const img = document.createElement("img");
+        img.src = image.src;
+        img.alt = image.alt || image.label;
+        galleryStage.appendChild(img);
+        return;
+      }
+
+      galleryStage.className = "gallery-stage placeholder";
+      const badge = document.createElement("div");
+      badge.className = "placeholder-badge";
+      badge.textContent = "SD";
+
+      const title = document.createElement("h3");
+      title.textContent = image ? `${image.label} 图片占位` : "图片占位";
+      title.style.margin = "0 0 10px";
+
+      const text = document.createElement("p");
+      text.style.margin = "0";
+      text.style.maxWidth = "420px";
+      text.style.lineHeight = "1.8";
+      text.textContent = "将配置中的 src 替换为真实图片路径后，这里会显示对应产品图片。当前布局已经支持主图与缩略图切换。";
+
+      galleryStage.append(badge, title, text);
+    }
+
+    function getActiveImage() {
+      return productInfo.images.find((item) => item.id === activeImageId) || productInfo.images[0] || null;
+    }
+
+    function renderSdQuestions() {
+      sdQuestionList.innerHTML = "";
+
+      sdQuestions.forEach((question, index) => {
+        const card = document.createElement("section");
+        card.className = "sd-item";
+
+        const heading = document.createElement("h3");
+        heading.innerHTML = `${index + 1}. ${question.prompt}${question.required ? '<span class="required-mark">*</span>' : ""}`;
+
+        const help = document.createElement("p");
+        help.className = "help-text";
+        help.textContent = "请选择最符合你感受的一个位置。中间值表示中性或难以判断。";
+
+        const scaleWrap = document.createElement("div");
+        scaleWrap.className = "scale-wrap";
+
+        const labels = document.createElement("div");
+        labels.className = "scale-labels";
+        labels.innerHTML = `<span>${question.leftLabel}</span><span>Scale</span><span style="text-align:right;">${question.rightLabel}</span>`;
+
+        const options = document.createElement("div");
+        options.className = "scale-options";
+
+        for (let value = 1; value <= question.scale; value += 1) {
+          const optionWrap = document.createElement("div");
+          optionWrap.className = "scale-option";
+
+          const input = document.createElement("input");
+          input.type = "radio";
+          input.id = `${question.id}-${value}`;
+          input.name = question.id;
+          input.value = String(value);
+          input.required = question.required && value === 1;
+
+          const optionLabel = document.createElement("label");
+          optionLabel.setAttribute("for", input.id);
+          optionLabel.innerHTML = `<span>${value}</span><small>${value === Math.ceil(question.scale / 2) ? "中性" : "&nbsp;"}</small>`;
+
+          optionWrap.append(input, optionLabel);
+          options.appendChild(optionWrap);
+        }
+
+        scaleWrap.append(labels, options);
+        card.append(heading, help, scaleWrap);
+        sdQuestionList.appendChild(card);
+      });
+    }
+
+    function renderExtraQuestions() {
+      extraQuestionList.innerHTML = "";
+
+      extraQuestions.forEach((question, index) => {
+        const card = document.createElement("section");
+        card.className = "extra-item";
+
+        const heading = document.createElement("h3");
+        heading.innerHTML = `${sdQuestions.length + index + 1}. ${question.label}${question.required ? '<span class="required-mark">*</span>' : ""}`;
+        card.appendChild(heading);
+
+        if (question.type === "radio") {
+          const help = document.createElement("p");
+          help.className = "help-text";
+          help.textContent = "请选择最符合当前感受的一个选项。";
+          card.appendChild(help);
+
+          const group = document.createElement("div");
+          group.className = "radio-group";
+
+          question.options.forEach((optionText, optionIndex) => {
+            const chip = document.createElement("label");
+            chip.className = "radio-chip";
+
+            const input = document.createElement("input");
+            input.type = "radio";
+            input.name = question.id;
+            input.value = optionText;
+            input.required = question.required && optionIndex === 0;
+
+            const text = document.createElement("span");
+            text.textContent = optionText;
+
+            chip.append(input, text);
+            group.appendChild(chip);
+          });
+
+          card.appendChild(group);
+        }
+
+        if (question.type === "textarea") {
+          const help = document.createElement("p");
+          help.className = "help-text";
+          help.textContent = "这一题为开放补充题，可根据需要填写。";
+
+          const textarea = document.createElement("textarea");
+          textarea.id = question.id;
+          textarea.name = question.id;
+          textarea.placeholder = question.placeholder || "";
+          textarea.required = Boolean(question.required);
+
+          card.append(help, textarea);
+        }
+
+        extraQuestionList.appendChild(card);
+      });
+    }
+
+    function presetDate() {
+      const dateField = document.getElementById("surveyDate");
+      if (dateField && !dateField.value) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const day = String(now.getDate()).padStart(2, "0");
+        dateField.value = `${year}-${month}-${day}`;
+      }
+    }
+
+    function collectFormData() {
+      const payload = {};
+
+      participantFields.forEach((field) => {
+        const element = document.getElementById(field.id);
+        payload[field.id] = element ? element.value.trim() : "";
+      });
+
+      sdQuestions.forEach((question) => {
+        const checked = document.querySelector(`input[name="${question.id}"]:checked`);
+        payload[question.id] = checked ? checked.value : "";
+      });
+
+      extraQuestions.forEach((question) => {
+        if (question.type === "radio") {
+          const checked = document.querySelector(`input[name="${question.id}"]:checked`);
+          payload[question.id] = checked ? checked.value : "";
+        } else if (question.type === "textarea") {
+          const element = document.getElementById(question.id);
+          payload[question.id] = element ? element.value.trim() : "";
+        }
+      });
+
+      payload.productId = productInfo.id;
+      payload.productTitle = productInfo.title;
+      payload.exportedAt = new Date().toISOString();
+      return payload;
+    }
+
+    function validateForm(payload) {
+      const missing = [];
+
+      participantFields.forEach((field) => {
+        if (field.required && !payload[field.id]) {
+          missing.push(field.label);
+        }
+      });
+
+      sdQuestions.forEach((question) => {
+        if (question.required && !payload[question.id]) {
+          missing.push(question.prompt);
+        }
+      });
+
+      extraQuestions.forEach((question) => {
+        if (question.required && !payload[question.id]) {
+          missing.push(question.label);
+        }
+      });
+
+      return missing;
+    }
+
+    function buildCsv(payload) {
+      const orderedColumns = [
+        ...participantFields.map((field) => ({ key: field.id, label: field.label })),
+        ...sdQuestions.map((question) => ({
+          key: question.id,
+          label: `${question.prompt}（${question.leftLabel}-${question.rightLabel}）`
+        })),
+        ...extraQuestions.map((question) => ({ key: question.id, label: question.label })),
+        { key: "productId", label: "产品ID" },
+        { key: "productTitle", label: "产品名称" },
+        { key: "exportedAt", label: "导出时间戳" }
+      ];
+
+      const headerRow = orderedColumns.map((column) => escapeCsv(column.label)).join(",");
+      const valueRow = orderedColumns.map((column) => escapeCsv(payload[column.key] ?? "")).join(",");
+      return `${headerRow}\n${valueRow}`;
+    }
+
+    function escapeCsv(value) {
+      const stringValue = String(value ?? "");
+      if (/[",\n]/.test(stringValue)) {
+        return `"${stringValue.replaceAll('"', '""')}"`;
+      }
+      return stringValue;
+    }
+
+    function downloadCsv(csvContent) {
+      const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      const timestamp = buildFileTimestamp();
+      anchor.href = url;
+      anchor.download = `semantic-differential-${productInfo.id}-${timestamp}.csv`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function buildFileTimestamp() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      const hours = String(now.getHours()).padStart(2, "0");
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+      const seconds = String(now.getSeconds()).padStart(2, "0");
+      return `${year}${month}${day}-${hours}${minutes}${seconds}`;
+    }
+
+    function setStatus(message, type) {
+      statusMessage.textContent = message;
+      statusMessage.className = `status-message${type ? ` ${type}` : ""}`;
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const payload = collectFormData();
+      const missing = validateForm(payload);
+
+      if (missing.length > 0) {
+        setStatus(`还有未完成的必填项：${missing.join("、")}`, "error");
+        return;
+      }
+
+      const csvContent = buildCsv(payload);
+      downloadCsv(csvContent);
+      setStatus("CSV 已生成并开始下载。你可以继续修改答案后再次导出。", "success");
+    });
+
+    resetButton.addEventListener("click", () => {
+      form.reset();
+      presetDate();
+      setStatus("已清空当前填写内容。", "");
+    });
+
+    initPage();
+  </script>
+</body>
+</html>
